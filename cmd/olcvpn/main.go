@@ -1,18 +1,29 @@
 package main
 
 import (
+	_ "embed"
 	"log"
 	"os"
 	"path/filepath"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"github.com/openlibrecommunity/olcvpn/internal/core"
 	"github.com/openlibrecommunity/olcvpn/internal/ui"
 )
 
+//go:embed icon.png
+var iconData []byte
+
 func main() {
 	// Создаём Fyne приложение
 	fyneApp := app.NewWithID("com.olc.vpn")
+
+	// Устанавливаем иконку
+	if len(iconData) > 0 {
+		icon := fyne.NewStaticResource("icon.png", iconData)
+		fyneApp.SetIcon(icon)
+	}
 
 	// Определяем директорию данных
 	homeDir, err := os.UserHomeDir()

@@ -15,7 +15,15 @@
       "Bash(go test *)",
       "Bash(./olcvpn.exe --help)",
       "WebSearch",
-      "Bash(./olcvpn.exe)"
+      "Bash(./olcvpn.exe)",
+      "Bash(magick icon-source.jpg -resize 512x512 -gravity center -extent 512x512 icon-512.png)",
+      "Bash(magick icon-source.jpg -resize 256x256 icon-256.png)",
+      "Bash(magick icon-source.jpg -resize 128x128 icon-128.png)",
+      "Bash(magick icon-source.jpg -resize 48x48 icon-48.png)",
+      "Bash(magick icon-source.jpg -resize 32x32 icon-32.png)",
+      "Bash(magick *)",
+      "Bash(go install *)",
+      "Bash(goversioninfo -icon=../../icon.ico -manifest=icon.manifest)"
     ]
   }
 }

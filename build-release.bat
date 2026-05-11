@@ -34,6 +34,11 @@ if not exist release mkdir release
 del /Q release\* 2>nul
 
 echo.
+echo [BUILD] Генерация Windows ресурсов (иконка)...
+cd cmd\olcvpn
+goversioninfo -64 -icon=..\..\icon.ico -manifest=icon.manifest >nul 2>&1
+cd ..\..
+
 echo [BUILD] Сборка Windows...
 set CGO_ENABLED=1
 set GOOS=windows
