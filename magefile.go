@@ -208,7 +208,7 @@ func buildLinux() error {
 	env := map[string]string{
 		"GOOS":        "linux",
 		"GOARCH":      "amd64",
-		"CGO_ENABLED": "0",
+		"CGO_ENABLED": "1",
 	}
 
 	output := filepath.Join(tmpDir, "olcvpn")
