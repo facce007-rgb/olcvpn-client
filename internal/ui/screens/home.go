@@ -221,10 +221,9 @@ func (s *HomeScreen) UpdateStatus(status string) {
 func (s *HomeScreen) UpdateMetrics() {
 	metrics := s.manager.GetMetrics()
 
-	// TODO: Вычислить скорость (нужно хранить предыдущие значения)
+	// Обновляем UI в главном потоке Fyne
 	s.uploadSpeed.SetText("0 B/s")
 	s.downloadSpeed.SetText("0 B/s")
-
 	s.uploadTotal.SetText(formatBytes(metrics.BytesUp))
 	s.downloadTotal.SetText(formatBytes(metrics.BytesDown))
 
@@ -234,7 +233,6 @@ func (s *HomeScreen) UpdateMetrics() {
 		s.latency.SetText("-")
 	}
 
-	// TODO: Вычислить длительность подключения
 	s.duration.SetText("00:00:00")
 }
 

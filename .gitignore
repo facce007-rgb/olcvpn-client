@@ -54,3 +54,8 @@ tmp/
 *.pem
 *.p12
 credentials.json
+
+# User data - НИКОГДА не коммитить!
+.olcvpn/
+profiles.json
+config.json

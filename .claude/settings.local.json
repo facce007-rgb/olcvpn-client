@@ -12,7 +12,8 @@
       "Bash(chmod +x *)",
       "Bash(xargs cat)",
       "Bash(go build *)",
-      "Bash(go test *)"
+      "Bash(go test *)",
+      "Bash(./olcvpn.exe --help)"
     ]
   }
 }
