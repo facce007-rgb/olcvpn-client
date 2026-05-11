@@ -1,0 +1,56 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.apk
+*.aar
+
+# Build artifacts
+release/
+build/
+dist/
+*.app
+
+# Go
+go.work
+go.work.sum
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.cxx/
+android/app/libs/*.aar
+
+# iOS
+ios/Pods/
+ios/*.xcworkspace
+ios/build/
+ios/DerivedData/
+
+# Temporary
+*.log
+*.tmp
+tmp/
+
+# Secrets (just in case)
+*.key
+*.pem
+*.p12
+credentials.json
