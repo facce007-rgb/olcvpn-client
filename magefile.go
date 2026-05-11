@@ -85,6 +85,15 @@ func Release() error {
 	return nil
 }
 
+// Windows собирает только Windows релиз (для CI)
+func Windows() error {
+	fmt.Println("Building Windows release...")
+	if err := os.MkdirAll("release", 0755); err != nil {
+		return err
+	}
+	return buildWindows()
+}
+
 // buildWindows собирает Windows релиз
 func buildWindows() error {
 	fmt.Println("\n📦 Building Windows...")
@@ -118,6 +127,15 @@ func buildWindows() error {
 		return sh.Run("powershell", "Compress-Archive", "-Force", "-Path", tmpDir+"/*", "-DestinationPath", zipFile)
 	}
 	return sh.Run("zip", "-r", zipFile, tmpDir)
+}
+
+// MacOS собирает только macOS релиз (для CI)
+func MacOS() error {
+	fmt.Println("Building macOS release...")
+	if err := os.MkdirAll("release", 0755); err != nil {
+		return err
+	}
+	return buildMacOS()
 }
 
 // buildMacOS собирает macOS релиз
@@ -166,6 +184,15 @@ func buildMacOS() error {
 
 	// Создаём zip
 	return sh.Run("zip", "-r", "release/olcvpn-macos-universal.zip", tmpDir)
+}
+
+// Linux собирает только Linux релиз (для CI)
+func Linux() error {
+	fmt.Println("Building Linux release...")
+	if err := os.MkdirAll("release", 0755); err != nil {
+		return err
+	}
+	return buildLinux()
 }
 
 // buildLinux собирает Linux релиз

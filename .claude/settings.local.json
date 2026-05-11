@@ -28,7 +28,10 @@
       "Bash(git push *)",
       "Bash(gh --version)",
       "Bash(mage release *)",
-      "Bash(~/go/bin/mage release *)"
+      "Bash(~/go/bin/mage release *)",
+      "Bash(curl -s https://api.github.com/repos/yanisplugg/olcvpn-client/actions/runs?per_page=5)",
+      "Bash(curl -s https://api.github.com/repos/yanisplugg/olcvpn-client/releases)",
+      "Bash(curl -s \"https://api.github.com/repos/yanisplugg/olcvpn-client/actions/runs/25644529689\")"
     ]
   }
 }

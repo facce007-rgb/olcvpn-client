@@ -24,7 +24,7 @@ jobs:
           go mod download
 
       - name: Build Windows
-        run: mage release
+        run: mage windows
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
@@ -51,7 +51,7 @@ jobs:
       - name: Build macOS
         run: |
           export PATH=$PATH:$(go env GOPATH)/bin
-          mage release
+          mage macos
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
@@ -78,7 +78,7 @@ jobs:
           sudo apt-get install -y gcc libgl1-mesa-dev xorg-dev
 
       - name: Build Linux
-        run: mage release
+        run: mage linux
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
