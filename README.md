@@ -1,5 +1,10 @@
 # 🎉 OLC VPN Client
 
+[![Release](https://img.shields.io/github/v/release/yanisplugg/olcvpn-client?style=flat-square)](https://github.com/yanisplugg/olcvpn-client/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/yanisplugg/olcvpn-client/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/yanisplugg/olcvpn-client/actions)
+[![License](https://img.shields.io/github/license/yanisplugg/olcvpn-client?style=flat-square)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/yanisplugg/olcvpn-client?style=flat-square)](go.mod)
+
 Кросс-платформенный VPN-клиент с поддержкой sing-box и olcrtc.
 
 ## 📥 Скачать
