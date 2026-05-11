@@ -38,7 +38,7 @@ echo [BUILD] Сборка Windows...
 set CGO_ENABLED=1
 set GOOS=windows
 set GOARCH=amd64
-go build -o release\olcvpn.exe .\cmd\olcvpn\main.go
+go build -ldflags="-s -w -H windowsgui" -o release\olcvpn.exe .\cmd\olcvpn
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Ошибка сборки Windows
     pause
