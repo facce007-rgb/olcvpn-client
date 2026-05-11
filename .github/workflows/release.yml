@@ -170,8 +170,10 @@ jobs:
 
             ### 📦 Downloads
             - **Windows**: `olcvpn-windows-amd64.zip` (Desktop GUI)
-            - **macOS/Linux**: Build from source (see BUILD.md)
-            - **Android/iOS**: Build from source (see android/BUILD.md, ios/BUILD.md)
+            - **macOS**: `olcvpn-macos-universal.zip` (Universal Binary)
+            - **Linux**: `olcvpn-linux-amd64.tar.gz` (Desktop GUI)
+            - **Android**: Build from source (in development)
+            - **iOS**: Build from source (see ios/BUILD.md)
 
             ### 📚 Documentation
             - [Build Instructions](BUILD.md)
