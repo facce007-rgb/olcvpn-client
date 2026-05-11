@@ -1,0 +1,231 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install dependencies
+        run: |
+          choco install mingw -y
+          refreshenv
+
+      - name: Build Windows
+        run: |
+          go build -ldflags="-s -w -H windowsgui" -o olcvpn.exe ./cmd/olcvpn
+          Compress-Archive -Path olcvpn.exe -DestinationPath olcvpn-windows.zip
+
+      - name: Upload Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: olcvpn-windows
+          path: olcvpn-windows.zip
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build macOS (Universal)
+        run: |
+          # Intel
+          GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -ldflags="-s -w" -o olcvpn-amd64 ./cmd/olcvpn
+          # Apple Silicon
+          GOOS=darwin GOARCH=arm64 CGO_ENABLED=1 go build -ldflags="-s -w" -o olcvpn-arm64 ./cmd/olcvpn
+          # Universal binary
+          lipo -create -output olcvpn olcvpn-amd64 olcvpn-arm64
+          chmod +x olcvpn
+          zip olcvpn-macos.zip olcvpn
+
+      - name: Upload macOS
+        uses: actions/upload-artifact@v4
+        with:
+          name: olcvpn-macos
+          path: olcvpn-macos.zip
+
+  build-linux:
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev xorg-dev gcc
+
+      - name: Build Linux
+        run: |
+          CGO_ENABLED=1 go build -ldflags="-s -w" -o olcvpn ./cmd/olcvpn
+          chmod +x olcvpn
+          tar -czf olcvpn-linux.tar.gz olcvpn
+
+      - name: Upload Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: olcvpn-linux
+          path: olcvpn-linux.tar.gz
+
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          gomobile init
+
+      - name: Build AAR
+        run: |
+          mkdir -p android/app/libs
+          gomobile bind -target android -androidapi 21 -o android/app/libs/vpncore.aar ./mobile
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Copy APK
+        run: |
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk olcvpn.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: olcvpn-android
+          path: olcvpn.apk
+
+  build-ios:
+    name: Build iOS Framework
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          gomobile init
+
+      - name: Build xcframework
+        run: |
+          mkdir -p ios/Frameworks
+          gomobile bind -target ios -o ios/Frameworks/VPNCore.xcframework ./mobile
+          zip -r olcvpn-ios-framework.zip ios/Frameworks/VPNCore.xcframework
+
+      - name: Upload iOS Framework
+        uses: actions/upload-artifact@v4
+        with:
+          name: olcvpn-ios
+          path: olcvpn-ios-framework.zip
+
+  release:
+    name: Create Release
+    needs: [build-windows, build-macos, build-linux, build-android, build-ios]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/olcvpn-windows/olcvpn-windows.zip
+            artifacts/olcvpn-macos/olcvpn-macos.zip
+            artifacts/olcvpn-linux/olcvpn-linux.tar.gz
+            artifacts/olcvpn-android/olcvpn.apk
+            artifacts/olcvpn-ios/olcvpn-ios-framework.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## 🎉 OLC VPN Client Release
+
+            ### 📥 Скачать
+
+            #### 🪟 Windows
+            - Скачать `olcvpn-windows.zip`
+            - Распаковать и запустить `olcvpn.exe`
+
+            #### 🍎 macOS
+            - Скачать `olcvpn-macos.zip`
+            - Распаковать и запустить `olcvpn`
+            - Universal binary (Intel + Apple Silicon)
+
+            #### 🐧 Linux
+            - Скачать `olcvpn-linux.tar.gz`
+            - Распаковать: `tar -xzf olcvpn-linux.tar.gz`
+            - Запустить: `./olcvpn`
+
+            #### 🤖 Android
+            - Скачать `olcvpn.apk`
+            - Разрешить установку из неизвестных источников
+            - Установить и запустить
+
+            #### 📱 iOS
+            - Скачать `olcvpn-ios-framework.zip` для разработки
+            - Или установить через TestFlight (скоро)
+
+            ### ✨ Возможности
+            - ✅ sing-box (VLESS, Reality, Shadowsocks, Trojan, VMess)
+            - ✅ olcrtc (WebRTC туннель)
+            - ✅ Kill Switch
+            - ✅ Подписки (Base64, Clash, sing-box, olcrtc)
+            - ✅ QR коды
+            - ✅ Метрики в реальном времени
+
+            ### 🛡️ Безопасность
+            - ✅ SOCKS5 с обязательной аутентификацией
+            - ✅ AES-256-GCM шифрование секретов
+            - ✅ Системный keyring
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
