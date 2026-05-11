@@ -8,32 +8,31 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/openlibrecommunity/olcvpn/internal/core"
+	"github.com/openlibrecommunity/olcvpn/internal/types"
 )
 
-// HomeScreen — главный экран в стиле v2RayTun
+// HomeScreen — главный экран в стиле Hiddify/v2RayTun
 type HomeScreen struct {
-	manager         *core.Manager
-	showProfiles    func()
-	showLogs        func()
+	manager      *core.Manager
+	showProfiles func()
+	showLogs     func()
 
 	// Основные элементы
-	statusCircle    *canvas.Circle
-	statusText      *widget.Label
-	profileName     *widget.Label
-	connectBtn      *widget.Button
+	connectionCircle *canvas.Circle
+	statusText       *widget.Label
+	profileCard      *fyne.Container
+	profileName      *widget.Label
+	profileType      *widget.Label
+	connectBtn       *widget.Button
 
 	// Метрики
-	uploadSpeed     *widget.Label
-	downloadSpeed   *widget.Label
-	uploadTotal     *widget.Label
-	downloadTotal   *widget.Label
-	latency         *widget.Label
-	duration        *widget.Label
+	delayIndicator *widget.Label
+	uploadTotal    *widget.Label
+	downloadTotal  *widget.Label
 
-	// Цвета статуса
+	// Цвета статуса (как в Hiddify)
 	colorDisconnected color.Color
 	colorConnecting   color.Color
 	colorConnected    color.Color
@@ -47,132 +46,110 @@ func NewHomeScreen(manager *core.Manager, showProfiles func(), showLogs func()) 
 		showProfiles: showProfiles,
 		showLogs:     showLogs,
 
-		// Цвета как в v2RayTun
-		colorDisconnected: color.NRGBA{R: 158, G: 158, B: 158, A: 255}, // Серый
-		colorConnecting:   color.NRGBA{R: 255, G: 193, B: 7, A: 255},   // Жёлтый
-		colorConnected:    color.NRGBA{R: 76, G: 175, B: 80, A: 255},   // Зелёный
-		colorError:        color.NRGBA{R: 244, G: 67, B: 54, A: 255},   // Красный
+		// Цвета как в Hiddify
+		colorDisconnected: color.NRGBA{R: 63, G: 81, B: 181, A: 255},  // Indigo
+		colorConnecting:   color.NRGBA{R: 255, G: 193, B: 7, A: 255},  // Amber
+		colorConnected:    color.NRGBA{R: 46, G: 125, B: 50, A: 255},  // Green
+		colorError:        color.NRGBA{R: 211, G: 47, B: 47, A: 255},  // Red
 	}
 
-	// Создаём элементы
-	s.statusCircle = canvas.NewCircle(s.colorDisconnected)
-	s.statusCircle.StrokeWidth = 4
-	s.statusCircle.StrokeColor = s.colorDisconnected
-	s.statusCircle.FillColor = color.Transparent
+	// Большой круг подключения (как в Hiddify)
+	s.connectionCircle = canvas.NewCircle(s.colorDisconnected)
+	s.connectionCircle.StrokeWidth = 8
+	s.connectionCircle.StrokeColor = s.colorDisconnected
+	s.connectionCircle.FillColor = color.Transparent
 
-	s.statusText = widget.NewLabel("Disconnected")
+	s.statusText = widget.NewLabel("Tap to Connect")
 	s.statusText.Alignment = fyne.TextAlignCenter
 	s.statusText.TextStyle = fyne.TextStyle{Bold: true}
 
-	s.profileName = widget.NewLabel("Tap to select profile")
-	s.profileName.Alignment = fyne.TextAlignCenter
+	// Карточка профиля (как в Hiddify)
+	s.profileName = widget.NewLabel("No Profile Selected")
+	s.profileName.TextStyle = fyne.TextStyle{Bold: true}
+	s.profileType = widget.NewLabel("")
 
+	s.profileCard = container.NewVBox(
+		s.profileName,
+		s.profileType,
+	)
+
+	// Кнопка подключения
 	s.connectBtn = widget.NewButton("CONNECT", s.onConnect)
 	s.connectBtn.Importance = widget.HighImportance
 
-	// Метрики
-	s.uploadSpeed = widget.NewLabel("0 B/s")
-	s.downloadSpeed = widget.NewLabel("0 B/s")
-	s.uploadTotal = widget.NewLabel("0 B")
-	s.downloadTotal = widget.NewLabel("0 B")
-	s.latency = widget.NewLabel("-")
-	s.duration = widget.NewLabel("00:00:00")
+	// Индикатор задержки (как в Hiddify)
+	s.delayIndicator = widget.NewLabel("- ms")
+	s.delayIndicator.Alignment = fyne.TextAlignCenter
+	s.delayIndicator.TextStyle = fyne.TextStyle{Bold: true}
+
+	// Метрики трафика
+	s.uploadTotal = widget.NewLabel("↑ 0 B")
+	s.downloadTotal = widget.NewLabel("↓ 0 B")
 
 	return s
 }
 
 // Content возвращает содержимое экрана
 func (s *HomeScreen) Content() fyne.CanvasObject {
-	// Верхняя часть - большой круг статуса (как в v2RayTun)
-	statusContainer := container.NewVBox(
+	// Карточка профиля сверху (как в Hiddify)
+	profileSection := container.NewVBox(
+		container.NewPadded(
+			container.New(
+				layout.NewMaxLayout(),
+				canvas.NewRectangle(color.NRGBA{R: 30, G: 30, B: 30, A: 255}),
+				container.NewPadded(s.profileCard),
+			),
+		),
+	)
+
+	// Большой круг подключения в центре (как в Hiddify)
+	connectionSection := container.NewVBox(
 		layout.NewSpacer(),
 		container.NewCenter(
 			container.NewStack(
-				container.NewPadded(s.statusCircle),
+				// Большой круг (200x200)
+				container.NewPadded(
+					container.NewPadded(
+						container.NewPadded(s.connectionCircle),
+					),
+				),
+				// Текст статуса в центре круга
 				container.NewVBox(
 					layout.NewSpacer(),
-					s.statusText,
+					container.NewCenter(s.statusText),
 					layout.NewSpacer(),
 				),
 			),
 		),
-		container.NewCenter(s.profileName),
+		// Индикатор задержки под кругом
+		container.NewCenter(
+			container.NewVBox(
+				widget.NewSeparator(),
+				s.delayIndicator,
+			),
+		),
 		layout.NewSpacer(),
 	)
 
-	// Кнопка подключения
-	connectContainer := container.NewCenter(
-		container.NewPadded(s.connectBtn),
-	)
-
-	// Метрики в стиле v2RayTun - две колонки
-	metricsGrid := container.New(
-		layout.NewGridLayout(2),
-
-		// Левая колонка
-		s.createMetricCard("↑ Upload", s.uploadSpeed, s.uploadTotal),
-
-		// Правая колонка
-		s.createMetricCard("↓ Download", s.downloadSpeed, s.downloadTotal),
-	)
-
-	// Дополнительные метрики
-	extraMetrics := container.New(
-		layout.NewGridLayout(2),
-		s.createSimpleMetric("Latency", s.latency),
-		s.createSimpleMetric("Duration", s.duration),
-	)
-
-	// Нижние кнопки
-	bottomButtons := container.NewHBox(
-		layout.NewSpacer(),
-		widget.NewButtonWithIcon("", theme.ContentAddIcon(), s.showProfiles),
-		widget.NewButtonWithIcon("", theme.DocumentIcon(), s.showLogs),
-		widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
-			// TODO: показать настройки
-		}),
-		layout.NewSpacer(),
+	// Футер с метриками (как в Hiddify)
+	footerSection := container.NewVBox(
+		widget.NewSeparator(),
+		container.NewHBox(
+			layout.NewSpacer(),
+			s.uploadTotal,
+			widget.NewLabel("  •  "),
+			s.downloadTotal,
+			layout.NewSpacer(),
+		),
 	)
 
 	// Собираем всё вместе
 	return container.NewBorder(
+		profileSection,
+		footerSection,
 		nil,
-		bottomButtons,
 		nil,
-		nil,
-		container.NewVBox(
-			statusContainer,
-			connectContainer,
-			widget.NewSeparator(),
-			metricsGrid,
-			extraMetrics,
-		),
-	)
-}
-
-// createMetricCard создаёт карточку метрики
-func (s *HomeScreen) createMetricCard(title string, speed *widget.Label, total *widget.Label) fyne.CanvasObject {
-	titleLabel := widget.NewLabel(title)
-	titleLabel.TextStyle = fyne.TextStyle{Bold: true}
-
-	speed.TextStyle = fyne.TextStyle{Bold: true}
-	total.Alignment = fyne.TextAlignCenter
-
-	return container.NewVBox(
-		titleLabel,
-		speed,
-		total,
-	)
-}
-
-// createSimpleMetric создаёт простую метрику
-func (s *HomeScreen) createSimpleMetric(title string, value *widget.Label) fyne.CanvasObject {
-	titleLabel := widget.NewLabel(title)
-	titleLabel.TextStyle = fyne.TextStyle{Bold: true}
-
-	return container.NewVBox(
-		titleLabel,
-		value,
+		connectionSection,
 	)
 }
 
@@ -180,60 +157,57 @@ func (s *HomeScreen) createSimpleMetric(title string, value *widget.Label) fyne.
 func (s *HomeScreen) UpdateStatus(status string) {
 	switch status {
 	case "disconnected":
-		s.statusText.SetText("Disconnected")
-		s.statusCircle.StrokeColor = s.colorDisconnected
-		s.statusCircle.FillColor = color.Transparent
+		s.statusText.SetText("Tap to Connect")
+		s.connectionCircle.StrokeColor = s.colorDisconnected
+		s.connectionCircle.FillColor = color.Transparent
 		s.connectBtn.SetText("CONNECT")
 		s.connectBtn.Enable()
 
 	case "connecting":
 		s.statusText.SetText("Connecting...")
-		s.statusCircle.StrokeColor = s.colorConnecting
-		s.statusCircle.FillColor = s.colorConnecting
+		s.connectionCircle.StrokeColor = s.colorConnecting
+		s.connectionCircle.FillColor = s.colorConnecting
 		s.connectBtn.SetText("CANCEL")
 
 	case "connected":
 		s.statusText.SetText("Connected")
-		s.statusCircle.StrokeColor = s.colorConnected
-		s.statusCircle.FillColor = s.colorConnected
+		s.connectionCircle.StrokeColor = s.colorConnected
+		s.connectionCircle.FillColor = s.colorConnected
 		s.connectBtn.SetText("DISCONNECT")
 		s.connectBtn.Enable()
 
 	case "error":
-		s.statusText.SetText("Error")
-		s.statusCircle.StrokeColor = s.colorError
-		s.statusCircle.FillColor = color.Transparent
+		s.statusText.SetText("Connection Failed")
+		s.connectionCircle.StrokeColor = s.colorError
+		s.connectionCircle.FillColor = color.Transparent
 		s.connectBtn.SetText("RETRY")
 		s.connectBtn.Enable()
 	}
 
-	// Обновляем название профиля
+	// Обновляем информацию о профиле
 	if profile := s.manager.GetActiveProfile(); profile != nil {
 		s.profileName.SetText(profile.Name)
+		s.profileType.SetText(fmt.Sprintf("%s • %s", profile.Engine, getProtocolName(profile)))
 	} else {
-		s.profileName.SetText("Tap to select profile")
+		s.profileName.SetText("No Profile Selected")
+		s.profileType.SetText("Tap + to add profile")
 	}
 
-	s.statusCircle.Refresh()
+	s.connectionCircle.Refresh()
 }
 
 // UpdateMetrics обновляет метрики
 func (s *HomeScreen) UpdateMetrics() {
 	metrics := s.manager.GetMetrics()
 
-	// Обновляем UI в главном потоке Fyne
-	s.uploadSpeed.SetText("0 B/s")
-	s.downloadSpeed.SetText("0 B/s")
-	s.uploadTotal.SetText(formatBytes(metrics.BytesUp))
-	s.downloadTotal.SetText(formatBytes(metrics.BytesDown))
+	s.uploadTotal.SetText(fmt.Sprintf("↑ %s", formatBytes(metrics.BytesUp)))
+	s.downloadTotal.SetText(fmt.Sprintf("↓ %s", formatBytes(metrics.BytesDown)))
 
-	if metrics.LatencyMS > 0 {
-		s.latency.SetText(fmt.Sprintf("%d ms", metrics.LatencyMS))
+	if metrics.LatencyMS > 0 && metrics.LatencyMS < 65000 {
+		s.delayIndicator.SetText(fmt.Sprintf("%d ms", metrics.LatencyMS))
 	} else {
-		s.latency.SetText("-")
+		s.delayIndicator.SetText("- ms")
 	}
-
-	s.duration.SetText("00:00:00")
 }
 
 // onConnect обрабатывает нажатие кнопки подключения
@@ -258,6 +232,17 @@ func (s *HomeScreen) onConnect() {
 			s.statusText.SetText(fmt.Sprintf("Error: %v", err))
 		}
 	}
+}
+
+// getProtocolName возвращает название протокола
+func getProtocolName(profile *types.Profile) string {
+	if profile.SingBox != nil {
+		return profile.SingBox.Protocol
+	}
+	if profile.OlcRTC != nil {
+		return fmt.Sprintf("olcrtc/%s", profile.OlcRTC.Carrier)
+	}
+	return "unknown"
 }
 
 // formatBytes форматирует байты в читаемый вид

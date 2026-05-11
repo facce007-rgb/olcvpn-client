@@ -7,7 +7,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
-// OLCTheme — тёмная тема в стиле v2RayTun/Material Design
+// OLCTheme — тёмная тема в стиле Hiddify/v2RayTun
 type OLCTheme struct{}
 
 var _ fyne.Theme = (*OLCTheme)(nil)
@@ -20,15 +20,15 @@ func (t *OLCTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) co
 	}
 
 	switch name {
-	// Основные цвета
+	// Основные цвета (как в Hiddify)
 	case theme.ColorNameBackground:
 		return color.NRGBA{R: 18, G: 18, B: 18, A: 255} // #121212 - Material Dark
 	case theme.ColorNameForeground:
 		return color.NRGBA{R: 255, G: 255, B: 255, A: 255}
 
-	// Акцентный цвет - голубой как в v2RayTun
+	// Акцентный цвет - синий как в Hiddify (seedColor: 0xFF293CA0)
 	case theme.ColorNamePrimary:
-		return color.NRGBA{R: 0, G: 229, B: 255, A: 255} // #00E5FF - Cyan A400
+		return color.NRGBA{R: 41, G: 60, B: 160, A: 255} // #293CA0 - Hiddify primary
 
 	// Кнопки
 	case theme.ColorNameButton:
@@ -36,15 +36,15 @@ func (t *OLCTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) co
 	case theme.ColorNameDisabledButton:
 		return color.NRGBA{R: 66, G: 66, B: 66, A: 255}
 
-	// Поверхности (карточки)
+	// Поверхности (карточки) - как в Hiddify
 	case theme.ColorNameInputBackground:
 		return color.NRGBA{R: 30, G: 30, B: 30, A: 255} // #1E1E1E
 
-	// Успех/Ошибка
+	// Успех/Ошибка (как в Hiddify)
 	case theme.ColorNameSuccess:
-		return color.NRGBA{R: 76, G: 175, B: 80, A: 255} // #4CAF50 - Green
+		return color.NRGBA{R: 46, G: 125, B: 50, A: 255} // #2E7D32 - Green 800
 	case theme.ColorNameError:
-		return color.NRGBA{R: 244, G: 67, B: 54, A: 255} // #F44336 - Red
+		return color.NRGBA{R: 211, G: 47, B: 47, A: 255} // #D32F2F - Red 700
 	case theme.ColorNameWarning:
 		return color.NRGBA{R: 255, G: 193, B: 7, A: 255} // #FFC107 - Amber
 

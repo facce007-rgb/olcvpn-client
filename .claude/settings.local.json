@@ -13,7 +13,9 @@
       "Bash(xargs cat)",
       "Bash(go build *)",
       "Bash(go test *)",
-      "Bash(./olcvpn.exe --help)"
+      "Bash(./olcvpn.exe --help)",
+      "WebSearch",
+      "Bash(./olcvpn.exe)"
     ]
   }
 }
