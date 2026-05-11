@@ -23,7 +23,12 @@
       "Bash(magick icon-source.jpg -resize 32x32 icon-32.png)",
       "Bash(magick *)",
       "Bash(go install *)",
-      "Bash(goversioninfo -icon=../../icon.ico -manifest=icon.manifest)"
+      "Bash(goversioninfo -icon=../../icon.ico -manifest=icon.manifest)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(gh --version)",
+      "Bash(mage release *)",
+      "Bash(~/go/bin/mage release *)"
     ]
   }
 }

@@ -15,7 +15,7 @@ import (
 // Build собирает desktop приложение для текущей платформы
 func Build() error {
 	fmt.Println("Building OLC VPN Client...")
-	return sh.Run("go", "build", "-o", "olcvpn", "./cmd/olcvpn/main_v2.go")
+	return sh.Run("go", "build", "-o", "olcvpn", "./cmd/olcvpn")
 }
 
 // Test запускает все тесты
@@ -56,27 +56,31 @@ func Release() error {
 		return err
 	}
 
-	// macOS
-	if err := buildMacOS(); err != nil {
-		return err
+	// macOS - только на macOS хосте
+	if runtime.GOOS == "darwin" {
+		if err := buildMacOS(); err != nil {
+			fmt.Println("⚠️  macOS build skipped (requires macOS host)")
+		}
+	} else {
+		fmt.Println("⚠️  macOS build skipped (requires macOS host)")
 	}
 
-	// Linux
-	if err := buildLinux(); err != nil {
-		return err
+	// Linux - только на Linux хосте
+	if runtime.GOOS == "linux" {
+		if err := buildLinux(); err != nil {
+			fmt.Println("⚠️  Linux build skipped (requires Linux host)")
+		}
+	} else {
+		fmt.Println("⚠️  Linux build skipped (requires Linux host)")
 	}
 
-	// Android
-	if err := buildAndroid(); err != nil {
-		return err
-	}
+	// Android - требует gomobile
+	fmt.Println("⚠️  Android build skipped (run: mage android)")
 
-	// iOS
-	if err := buildIOS(); err != nil {
-		return err
-	}
+	// iOS - требует gomobile и macOS
+	fmt.Println("⚠️  iOS build skipped (run: mage ios on macOS)")
 
-	fmt.Println("\n✅ All releases built successfully!")
+	fmt.Println("\n✅ Windows release built successfully!")
 	fmt.Println("📦 Check release/ directory")
 	return nil
 }
@@ -100,14 +104,18 @@ func buildWindows() error {
 	}
 
 	output := filepath.Join(tmpDir, "olcvpn.exe")
-	if err := sh.RunWith(env, "go", "build", "-o", output, "./cmd/olcvpn/main_v2.go"); err != nil {
+	if err := sh.RunWith(env, "go", "build", "-o", output, "./cmd/olcvpn"); err != nil {
 		return err
 	}
 
+	// Копируем README и LICENSE
+	sh.Copy(filepath.Join(tmpDir, "README.md"), "README.md")
+	sh.Copy(filepath.Join(tmpDir, "LICENSE"), "LICENSE")
+
 	// Создаём zip
-	zipFile := "release/olcvpn-windows.zip"
+	zipFile := "release/olcvpn-windows-amd64.zip"
 	if runtime.GOOS == "windows" {
-		return sh.Run("powershell", "Compress-Archive", "-Path", tmpDir+"/*", "-DestinationPath", zipFile)
+		return sh.Run("powershell", "Compress-Archive", "-Force", "-Path", tmpDir+"/*", "-DestinationPath", zipFile)
 	}
 	return sh.Run("zip", "-r", zipFile, tmpDir)
 }
@@ -129,14 +137,14 @@ func buildMacOS() error {
 		"CGO_ENABLED": "1",
 	}
 	outputIntel := filepath.Join(tmpDir, "olcvpn-amd64")
-	if err := sh.RunWith(env, "go", "build", "-o", outputIntel, "./cmd/olcvpn/main_v2.go"); err != nil {
+	if err := sh.RunWith(env, "go", "build", "-o", outputIntel, "./cmd/olcvpn"); err != nil {
 		return err
 	}
 
 	// Собираем для Apple Silicon
 	env["GOARCH"] = "arm64"
 	outputArm := filepath.Join(tmpDir, "olcvpn-arm64")
-	if err := sh.RunWith(env, "go", "build", "-o", outputArm, "./cmd/olcvpn/main_v2.go"); err != nil {
+	if err := sh.RunWith(env, "go", "build", "-o", outputArm, "./cmd/olcvpn"); err != nil {
 		return err
 	}
 
@@ -152,9 +160,12 @@ func buildMacOS() error {
 	// Делаем исполняемым
 	os.Chmod(outputUniversal, 0755)
 
+	// Копируем README и LICENSE
+	sh.Copy(filepath.Join(tmpDir, "README.md"), "README.md")
+	sh.Copy(filepath.Join(tmpDir, "LICENSE"), "LICENSE")
+
 	// Создаём zip
-	zipFile := "release/olcvpn-macos.zip"
-	return sh.Run("zip", "-r", zipFile, tmpDir)
+	return sh.Run("zip", "-r", "release/olcvpn-macos-universal.zip", tmpDir)
 }
 
 // buildLinux собирает Linux релиз
@@ -167,7 +178,6 @@ func buildLinux() error {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	// Собираем бинарник
 	env := map[string]string{
 		"GOOS":        "linux",
 		"GOARCH":      "amd64",
@@ -175,118 +185,81 @@ func buildLinux() error {
 	}
 
 	output := filepath.Join(tmpDir, "olcvpn")
-	if err := sh.RunWith(env, "go", "build", "-o", output, "./cmd/olcvpn/main_v2.go"); err != nil {
+	if err := sh.RunWith(env, "go", "build", "-o", output, "./cmd/olcvpn"); err != nil {
 		return err
 	}
 
 	// Делаем исполняемым
 	os.Chmod(output, 0755)
 
+	// Копируем README и LICENSE
+	sh.Copy(filepath.Join(tmpDir, "README.md"), "README.md")
+	sh.Copy(filepath.Join(tmpDir, "LICENSE"), "LICENSE")
+
 	// Создаём tar.gz
-	tarFile := "release/olcvpn-linux.tar.gz"
-	return sh.Run("tar", "-czf", tarFile, "-C", tmpDir, ".")
+	return sh.Run("tar", "-czf", "release/olcvpn-linux-amd64.tar.gz", "-C", tmpDir, ".")
 }
 
-// buildAndroid собирает Android APK
+// buildAndroid собирает Android AAR
 func buildAndroid() error {
-	fmt.Println("\n📦 Building Android...")
+	fmt.Println("\n📦 Building Android AAR...")
 
-	// Сначала собираем AAR
+	// Проверяем gomobile
+	if err := sh.Run("gomobile", "version"); err != nil {
+		return fmt.Errorf("gomobile not found. Install: go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init")
+	}
+
+	// Создаём директорию
 	if err := os.MkdirAll("android/app/libs", 0755); err != nil {
 		return err
 	}
 
-	if err := sh.Run("gomobile", "bind",
+	// Собираем AAR
+	return sh.Run("gomobile", "bind",
 		"-target", "android",
 		"-androidapi", "21",
 		"-o", "android/app/libs/vpncore.aar",
-		"./mobile/"); err != nil {
-		return err
-	}
-
-	// Собираем APK через Gradle
-	if err := os.Chdir("android"); err != nil {
-		return err
-	}
-	defer os.Chdir("..")
-
-	var gradleCmd string
-	if runtime.GOOS == "windows" {
-		gradleCmd = "gradlew.bat"
-	} else {
-		gradleCmd = "./gradlew"
-	}
-
-	if err := sh.Run(gradleCmd, "assembleRelease"); err != nil {
-		return err
-	}
-
-	// Копируем APK в release
-	apkSrc := "app/build/outputs/apk/release/app-release.apk"
-	apkDst := "../release/olcvpn.apk"
-	return sh.Run("cp", apkSrc, apkDst)
+		"./mobile/")
 }
 
 // buildIOS собирает iOS xcframework
 func buildIOS() error {
-	fmt.Println("\n📦 Building iOS...")
+	fmt.Println("\n📦 Building iOS xcframework...")
 
+	// Проверяем gomobile
+	if err := sh.Run("gomobile", "version"); err != nil {
+		return fmt.Errorf("gomobile not found. Install: go install golang.org/x/mobile/cmd/gomobile@latest && gomobile init")
+	}
+
+	// Проверяем что мы на macOS
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS build requires macOS")
+	}
+
+	// Создаём директорию
 	if err := os.MkdirAll("ios/Frameworks", 0755); err != nil {
 		return err
 	}
 
-	if err := sh.Run("gomobile", "bind",
+	// Собираем xcframework
+	return sh.Run("gomobile", "bind",
 		"-target", "ios",
 		"-o", "ios/Frameworks/VPNCore.xcframework",
-		"./mobile/"); err != nil {
-		return err
-	}
-
-	// Создаём zip с xcframework
-	zipFile := "release/olcvpn-ios-framework.zip"
-	return sh.Run("zip", "-r", zipFile, "ios/Frameworks/VPNCore.xcframework")
-}
-
-// Dev запускает приложение в режиме разработки
-func Dev() error {
-	fmt.Println("Running in development mode...")
-	return sh.Run("go", "run", "./cmd/olcvpn/main_v2.go")
-}
-
-// Deps устанавливает зависимости
-func Deps() error {
-	fmt.Println("Installing dependencies...")
-	if err := sh.Run("go", "mod", "download"); err != nil {
-		return err
-	}
-	return sh.Run("go", "mod", "tidy")
+		"./mobile/")
 }
 
 // Android собирает только Android AAR
 func Android() error {
-	fmt.Println("Building Android AAR...")
-
-	if err := os.MkdirAll("android/app/libs", 0755); err != nil {
-		return err
-	}
-
-	return sh.Run("gomobile", "bind",
-		"-target", "android",
-		"-androidapi", "21",
-		"-o", "android/app/libs/vpncore.aar",
-		"./mobile/")
+	return buildAndroid()
 }
 
 // IOS собирает только iOS xcframework
 func IOS() error {
-	fmt.Println("Building iOS xcframework...")
+	return buildIOS()
+}
 
-	if err := os.MkdirAll("ios/Frameworks", 0755); err != nil {
-		return err
-	}
-
-	return sh.Run("gomobile", "bind",
-		"-target", "ios",
-		"-o", "ios/Frameworks/VPNCore.xcframework",
-		"./mobile/")
+// Run запускает приложение
+func Run() error {
+	fmt.Println("Running OLC VPN Client...")
+	return sh.Run("go", "run", "./cmd/olcvpn")
 }
