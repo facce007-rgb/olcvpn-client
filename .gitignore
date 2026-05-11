@@ -59,3 +59,37 @@ credentials.json
 .olcvpn/
 profiles.json
 config.json
+
+# Development files
+.claude/
+claude.bat
+*.bat
+*.sh
+Dockerfile.*
+*-docker.*
+*-release.*
+install-*.bat
+publish-*.bat
+publish-*.sh
+create-release.*
+
+# Documentation drafts
+*_DRAFT.md
+*_STATUS.md
+*_SUMMARY.md
+*_COMPLETE.md
+*_REQUIREMENTS.md
+*_GUIDE.md
+*_PUBLISH.md
+*_UPDATE.md
+*_APPLIED.md
+*_ADDED.md
+QUICKSTART.md
+START_HERE.md
+CONTRIBUTING.md
+DEPLOY.md
+
+# Icons (source files)
+icon-*.png
+icon-source.*
+*.ico
