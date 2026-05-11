@@ -7,7 +7,7 @@ setlocal
 :: ============================================================
 
 :: API ключ из Dashboard -> Endpoints в OmniRoute
-set OMNIROUTE_KEY=sk-d3a5199541fb0342-e39c42-bd5ca237
+set OMNIROUTE_KEY=sk-d3a5199541fb0342-667f6d-6594f11e
 
 :: Адрес OmniRoute (по умолчанию локальный)
 set OMNIROUTE_URL=http://localhost:20128/v1
@@ -19,7 +19,7 @@ set OMNIROUTE_MODEL=kr/claude-sonnet-4.5
 :: ============================================================
 
 :: Проверка: заполнен ли ключ
-if "%OMNIROUTE_KEY%"==sk-d3a5199541fb0342-e39c42-bd5ca237 (
+if "%OMNIROUTE_KEY%"==sk-d3a5199541fb0342-667f6d-6594f11e (
     echo [ОШИБКА] Укажи OMNIROUTE_KEY в этом батнике!
     echo Ключ берётся из OmniRoute Dashboard ^> Endpoints
     pause
