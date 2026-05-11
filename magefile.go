@@ -152,7 +152,7 @@ func buildMacOS() error {
 	env := map[string]string{
 		"GOOS":        "darwin",
 		"GOARCH":      "amd64",
-		"CGO_ENABLED": "1",
+		"CGO_ENABLED": "0",
 	}
 	outputIntel := filepath.Join(tmpDir, "olcvpn-amd64")
 	if err := sh.RunWith(env, "go", "build", "-o", outputIntel, "./cmd/olcvpn"); err != nil {
@@ -208,7 +208,7 @@ func buildLinux() error {
 	env := map[string]string{
 		"GOOS":        "linux",
 		"GOARCH":      "amd64",
-		"CGO_ENABLED": "1",
+		"CGO_ENABLED": "0",
 	}
 
 	output := filepath.Join(tmpDir, "olcvpn")
