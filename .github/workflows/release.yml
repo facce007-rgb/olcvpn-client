@@ -127,7 +127,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -148,8 +148,6 @@ jobs:
         with:
           files: |
             artifacts/windows-build/*
-            artifacts/macos-build/*
-            artifacts/linux-build/*
           body: |
             ## 🎉 OLC VPN Client Release
 
@@ -167,10 +165,9 @@ jobs:
             - **Security**: SOCKS5 with authentication, encrypted profile storage
 
             ### 📦 Downloads
-            - **Windows**: `olcvpn-windows-amd64.zip`
-            - **macOS**: `olcvpn-macos-universal.zip`
-            - **Linux**: `olcvpn-linux-amd64.tar.gz`
-            - **Android**: `olcvpn-android.apk`
+            - **Windows**: `olcvpn-windows-amd64.zip` (Desktop GUI)
+            - **macOS/Linux**: Build from source (see BUILD.md)
+            - **Android/iOS**: Build from source (see android/BUILD.md, ios/BUILD.md)
 
             ### 📚 Documentation
             - [Build Instructions](BUILD.md)
