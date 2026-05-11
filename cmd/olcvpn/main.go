@@ -21,6 +21,9 @@ func main() {
 	}
 	dataDir := filepath.Join(homeDir, ".olcvpn")
 
+	log.Println("OLC VPN Client starting...")
+	log.Printf("Data directory: %s", dataDir)
+
 	// Создаём Manager
 	manager, err := core.NewManager(dataDir)
 	if err != nil {
@@ -28,7 +31,9 @@ func main() {
 	}
 	defer manager.Close()
 
+	log.Printf("Loaded %d profiles", len(manager.ListProfiles()))
+
 	// Создаём и запускаем UI в стиле v2RayTun
-	app := ui.NewAppV2(fyneApp, manager)
-	app.Run()
+	vpnApp := ui.NewAppV2(fyneApp, manager)
+	vpnApp.Run()
 }
