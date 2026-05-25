@@ -48,7 +48,6 @@ jobs:
           mage android
 
       - name: Build debug APK
-        working-directory: android
         run: |
           chmod +x ./gradlew
           ./gradlew assembleDebug
