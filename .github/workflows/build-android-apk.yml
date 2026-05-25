@@ -43,6 +43,8 @@ jobs:
       - name: Build Android AAR
         run: |
           export PATH="$HOME/go/bin:$PATH"
+          go get golang.org/x/mobile@latest
+          go get golang.org/x/mobile/cmd/gobind@latest
           mage android
 
       - name: Build debug APK
