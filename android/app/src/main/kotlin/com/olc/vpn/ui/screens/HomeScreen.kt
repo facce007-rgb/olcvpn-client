@@ -11,10 +11,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.olc.vpn.viewmodel.VpnViewModel
 
-// HomeScreen в стиле Hiddify/v2RayTun
 @Composable
 fun HomeScreen(
     viewModel: VpnViewModel,
@@ -24,14 +22,14 @@ fun HomeScreen(
     val bytesUp by viewModel.bytesUp.collectAsState()
     val bytesDown by viewModel.bytesDown.collectAsState()
     val selectedProfile by viewModel.selectedProfile.collectAsState()
-    val latency by viewModel.latency.collectAsState()
 
-    // Цвета как в Hiddify
+    val latency = 0
+
     val statusColor = when (connectionState) {
-        "connected" -> Color(0xFF2E7D32)      // Green 800
-        "connecting" -> Color(0xFFFFC107)     // Amber
-        "error" -> Color(0xFFD32F2F)          // Red 700
-        else -> Color(0xFF3F51B5)             // Indigo (disconnected)
+        "connected" -> Color(0xFF2E7D32)
+        "connecting" -> Color(0xFFFFC107)
+        "error" -> Color(0xFFD32F2F)
+        else -> Color(0xFF3F51B5)
     }
 
     Column(
@@ -40,7 +38,6 @@ fun HomeScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Карточка профиля сверху (как в Hiddify)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -69,12 +66,10 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Большая круглая кнопка подключения (как в Hiddify)
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.size(200.dp)
         ) {
-            // Круг с обводкой
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawCircle(
                     color = statusColor,
@@ -87,7 +82,6 @@ fun HomeScreen(
                 }
             }
 
-            // Текст статуса в центре
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -103,7 +97,6 @@ fun HomeScreen(
                 )
             }
 
-            // Кликабельная область
             Surface(
                 onClick = {
                     if (connectionState == "connected") {
@@ -118,7 +111,6 @@ fun HomeScreen(
             ) {}
         }
 
-        // Индикатор задержки под кругом (как в Hiddify)
         Spacer(modifier = Modifier.height(24.dp))
         Divider()
         Spacer(modifier = Modifier.height(8.dp))
@@ -126,12 +118,11 @@ fun HomeScreen(
             text = if (latency > 0 && latency < 65000) "${latency} ms" else "- ms",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = if (latency > 0 && latency < 200) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Футер с метриками (как в Hiddify)
         Divider()
         Spacer(modifier = Modifier.height(8.dp))
         Row(
