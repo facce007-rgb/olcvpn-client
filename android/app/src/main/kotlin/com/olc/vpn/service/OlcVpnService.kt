@@ -10,12 +10,9 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.core.app.NotificationCompat
 import com.olc.vpn.MainActivity
-import com.olc.vpn.R
 import kotlinx.coroutines.*
 import mobile.Mobile
 import mobile.VPNCore
-import java.io.FileInputStream
-import java.io.FileOutputStream
 
 class OlcVpnService : VpnService() {
 
@@ -35,7 +32,6 @@ class OlcVpnService : VpnService() {
         super.onCreate()
         createNotificationChannel()
 
-        // Инициализируем VPN Core
         vpnCore = Mobile.newVPNCore()
         val dataDir = applicationContext.filesDir.absolutePath
         vpnCore?.initialize(dataDir)
@@ -50,18 +46,19 @@ class OlcVpnService : VpnService() {
                     connect(profileJson)
                 }
             }
+
             ACTION_DISCONNECT -> {
                 disconnect()
                 stopSelf()
             }
         }
+
         return START_STICKY
     }
 
     private fun connect(profileJson: String) {
         serviceScope.launch {
             try {
-                // Создаём VPN интерфейс
                 val builder = Builder()
                     .setSession("OLC VPN")
                     .addAddress("10.0.0.1", 30)
@@ -71,9 +68,6 @@ class OlcVpnService : VpnService() {
                     .setMtu(1500)
                     .setBlocking(false)
 
-                // Защищаем сокеты от routing loop
-                protect(0) // Защищаем все сокеты
-
                 vpnInterface = builder.establish()
 
                 if (vpnInterface == null) {
@@ -82,15 +76,12 @@ class OlcVpnService : VpnService() {
                     return@launch
                 }
 
-                // Получаем file descriptor
                 val fd = vpnInterface!!.fd
 
-                // Запускаем VPN Core с TUN fd
                 vpnCore?.startWithTunFd(fd.toLong())
 
                 updateNotification("Connected")
 
-                // Мониторим трафик
                 monitorTraffic()
 
             } catch (e: Exception) {
@@ -157,15 +148,18 @@ class OlcVpnService : VpnService() {
 
     private fun createNotification(text: String): Notification {
         val intent = Intent(this, MainActivity::class.java)
+
         val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this,
+            0,
+            intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("OLC VPN")
             .setContentText(text)
-            .setSmallIcon(R.drawable.ic_vpn)
+            .setSmallIcon(android.R.drawable.stat_sys_download_done)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build()
@@ -173,7 +167,10 @@ class OlcVpnService : VpnService() {
 
     private fun updateNotification(text: String) {
         val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.notify(NOTIFICATION_ID, createNotification(text))
+        notificationManager.notify(
+            NOTIFICATION_ID,
+            createNotification(text)
+        )
     }
 
     override fun onDestroy() {
